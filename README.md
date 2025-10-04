@@ -9,8 +9,6 @@ Test your typing speed and accuracy under a time limit!
 
 This game displays random words from a word list (`words.txt`) and challenges the player to type them correctly before the timer runs out. Correct letters are highlighted in **green**, incorrect letters in **red**, and the score is tracked in real time.  
 
-Perfect for practicing **C++ basics**, **terminal I/O**, and **multithreading**.
-
 ---
 
 ## Features
