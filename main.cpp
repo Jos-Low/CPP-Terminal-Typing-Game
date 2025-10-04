@@ -9,59 +9,58 @@
 #include <ctime>
 #include <cstdlib>
 #include <atomic>
+#include <fcntl.h> // <-- needed for fcntl
 
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
+#define RESET "\033[0m"
+#define RED "\033[31m"
+#define GREEN "\033[32m"
 
 std::atomic<int> time_left(0);
 std::atomic<bool> time_up(false);
 
-char get_ch()
-{
+char get_char_nonblocking() {
     char buf = 0;
-    struct termios old = {};
-
+    struct termios old = {}, newt = {};
     if (tcgetattr(STDIN_FILENO, &old) < 0) perror("tcgetattr");
+    newt = old;
 
-    old.c_lflag &= ~ICANON;
-    old.c_lflag &= ~ECHO;
+    newt.c_lflag &= ~ICANON;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &old) < 0) perror("tcsetattr");
+    // set non-blocking mode
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
-    if (read(STDIN_FILENO, &buf, 1) < 0) perror("read");
+    int n = read(STDIN_FILENO, &buf, 1);
 
-    old.c_lflag |= ICANON;
-    old.c_lflag |= ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &old);
+    fcntl(STDIN_FILENO, F_SETFL, flags);
 
-    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &old) < 0) perror("tcsetattr");
-
-    return buf;
+    if (n > 0) return buf;
+    return 0;
 }
 
-std::vector<std::string> load_words()
-{
+std::vector<std::string> load_words() {
     std::ifstream file("words.txt");
     std::vector<std::string> words;
     std::string word;
 
-    if (!file)
-    {
+    if (!file) {
         std::cerr << "Error opening words file\n";
         return {};
     }
-    while (file >> word)
-    {
+
+    while (file >> word) {
         words.push_back(word);
     }
+
     return words;
 }
 
-void timer(int seconds)
-{
+void timer(int seconds) {
     time_left = seconds;
-    while (time_left > 0)
-    {
+    while (time_left > 0) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         time_left--;
     }
@@ -81,14 +80,19 @@ int main() {
 
     while (!time_up) {
         std::string word = words[rand() % words.size()];
-        std::string progress = "";
+        std::string progress;
         int index = 0;
 
         std::cout << "\nTime left: " << time_left << "\n" << std::flush;
         std::cout << "Type the word: " << word << std::flush;
 
-        while (index < word.size() && !time_up) {
-            char c = get_ch();
+        while (index < (int)word.size() && !time_up) {
+            char c = get_char_nonblocking();
+            if (c == 0) {
+                // no key pressed, just check time
+                continue;
+            }
+
             progress.push_back(c);
 
             std::cout << "\rTime left: " << time_left;
@@ -100,11 +104,11 @@ int main() {
                         std::cout << GREEN << word[i] << RESET;
                     else
                         std::cout << RED << word[i] << RESET;
-                } 
-                else {
+                } else {
                     std::cout << word[i];
                 }
             }
+
             std::cout << std::flush;
             index++;
         }
@@ -117,8 +121,9 @@ int main() {
 
     t.join();
 
+    std::cout << "\n\nCorrect Words: " << score << "/" << total;
     if (score < total)
-        std::cout << "\n\nCorrect Words: " << score << "/" << total << " :'(\n";
+        std::cout << " :'(\n";
     else
-        std::cout << "\n\nCorrect Words: " << score << "/" << total << " ! ! !\n";
+        std::cout << " ! ! !\n";
 }
