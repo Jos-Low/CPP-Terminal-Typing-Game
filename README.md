@@ -39,5 +39,6 @@ This game displays random words from a word list (`words.txt`) and challenges th
    cd typing-game
 
 2. For most efficient compile use:
+
    g++ -std=c++17 -O0 -Wall -Wextra -o game main.cpp
 
