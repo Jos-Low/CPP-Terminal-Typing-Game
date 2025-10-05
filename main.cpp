@@ -9,7 +9,8 @@
 #include <ctime>
 #include <cstdlib>
 #include <atomic>
-#include <fcntl.h> // <-- needed for fcntl
+#include <fcntl.h>
+#include <iomanip>
 
 #define RESET "\033[0m"
 #define RED "\033[31m"
@@ -67,13 +68,45 @@ void timer(int seconds) {
     time_up = true;
 }
 
+void stats_output(int letter_score, int letter_count, int score, int total, int seconds)
+{
+    std::cout << std::fixed << std::setprecision(2);
+    std::string seperator(50, '-');
+    std::cout << '\n' << seperator;
+    double accuracy = static_cast<double>(letter_score) / letter_count * 100.0;
+    double WPM = (static_cast<double>(letter_score) / 4.5) * (60.0 / seconds);
+
+    std::cout << "\nCorrect Words: " << score << '/' << total;
+    std::cout << "\nCorrect Letters: " << letter_score << '/' << letter_count;
+
+    if (accuracy <= 85.0)
+        std::cout << "\nAccuracy " << RED << accuracy << "% :'(\n" << RESET;
+    else
+        std::cout << "\nAccuracy " << GREEN << accuracy << "% !!! XD\n" << RESET;
+
+    std::cout << "WPM: " << WPM;
+    std::cout << "\nPerformance Level: ";
+
+    if (WPM < 40)
+        std::cout << RED << "Beginner :'(";
+    else if (WPM < 60)
+        std::cout << RED << "Average :/";
+    else if (WPM < 90)
+        std::cout << GREEN << "Profficient :)";
+    else if (WPM < 130)
+        std::cout << GREEN << "Advanced! XD";
+    else
+        std::cout << GREEN << "Elite !!!";
+    std::cout << '\n' << seperator << '\n';
+}
+
 int main() {
     srand(time(0));
 
     std::vector<std::string> words = load_words();
     if (words.empty()) return 1;
 
-    int score = 0, total = 0;
+    int score = 0, total = 0, letter_score = 0, letter_count = 0;
     int seconds = 10;
     time_left = seconds;
     std::thread t(timer, seconds);
@@ -83,6 +116,8 @@ int main() {
         std::string progress;
         int index = 0;
 
+        std::string space(10, '\n');
+        std::cout << space;
         std::cout << "\nTime left: " << time_left << "\n" << std::flush;
         std::cout << "Type the word: " << word << std::flush;
 
@@ -101,10 +136,16 @@ int main() {
             for (int i = 0; i < (int)word.size(); i++) {
                 if (i < (int)progress.size()) {
                     if (progress[i] == word[i])
+                    {
                         std::cout << GREEN << word[i] << RESET;
+                        if (index == word.length()-1)
+                            letter_score++;
+                    }
                     else
                         std::cout << RED << word[i] << RESET;
-                } else {
+                } 
+                else 
+                {
                     std::cout << word[i];
                 }
             }
@@ -112,18 +153,15 @@ int main() {
             std::cout << std::flush;
             index++;
         }
+        letter_count += word.size();
 
         if (!time_up) {
             if (progress == word) score++;
+
             total++;
         }
     }
 
     t.join();
-
-    std::cout << "\n\nCorrect Words: " << score << "/" << total;
-    if (score < total)
-        std::cout << " :'(\n";
-    else
-        std::cout << " ! ! !\n";
+    stats_output(letter_score, letter_count, score, total, seconds);
 }
