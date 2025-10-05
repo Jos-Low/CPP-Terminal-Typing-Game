@@ -107,7 +107,7 @@ int main() {
     if (words.empty()) return 1;
 
     int score = 0, total = 0, letter_score = 0, letter_count = 0;
-    int seconds = 10;
+    int seconds = 30;
     time_left = seconds;
     std::thread t(timer, seconds);
 
