@@ -116,7 +116,7 @@ int main() {
         std::string progress;
         int index = 0;
 
-        std::string space(20, '\n');
+        std::string space(10, '\n');
         std::cout << space;
         std::cout << "\nTime left: " << time_left << "\n" << std::flush;
         std::cout << "Type the word: " << word << std::flush;
