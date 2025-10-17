@@ -1,7 +1,7 @@
 # C++ Terminal Typing Game 🖥️⌨️
 
 A simple **terminal-based typing game** written in C++.  
-Test your typing speed and accuracy under a time limit!
+
 
 ---
 
