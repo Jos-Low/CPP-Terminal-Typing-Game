@@ -42,11 +42,28 @@ std::string Wordle::Pick_Word(const std::string& filename)
 
 void Wordle::Display_Grid() const
 {
+    int c {};
+    int pos {};
     for (const auto& row : Grid)
     {
         for (const auto& cell : row)
             std::cout << cell;
+        // Print letters left box
+        if (c == 2 || c == 3)
+        {
+            std::cout << "\t\t| ";
+            for (int i {}; i < 13; ++i)
+            {
+                std::cout << letters_left.at(pos);
+                pos++;
+            }
+            std::cout << " |";
+        }
+        else if (c == 1 || c == 4)
+            std::cout << "\t\t|" << std::string(15, '-') << '|';
+
         std::cout << '\n';
+        c++;
     }
 }
 
@@ -56,6 +73,10 @@ bool Wordle::Guess_Check(std::string guess, int round)
 
     for (int i = 0; i < 5; ++i)
     {
+        auto index = std::find(letters_left.begin(), letters_left.end(), guess.at(i));
+        if (index != letters_left.end())
+            *index = '-';
+
         if (guess[i] == word_to_guess[i])
         {
             std::string letter = "[" + GREEN + guess.substr(i, 1) + RESET + "]";
