@@ -22,6 +22,7 @@ Test your **typing accuracy under pressure** or challenge your **word-guessing s
   - 🟨 **Yellow** — Correct letter in wrong position  
   - ⬜ **Gray** — Letter not in word
 - Uses a curated list of valid 5-letter words.
+- Displays letters left not used
 
 ---
 
