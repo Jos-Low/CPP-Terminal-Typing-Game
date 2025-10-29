@@ -92,28 +92,32 @@ void TypingGame::stats_output(int letter_score, int letter_count, int score, int
     std::cout << "\nPerformance Level: ";
 
     if (WPM < 40)
-        std::cout << RED << "Beginner :'(";
+        std::cout << RED << "Beginner :'(" << RESET;
     else if (WPM < 60)
-        std::cout << RED << "Average :/";
+        std::cout << RED << "Average :/" << RESET;
     else if (WPM < 90)
-        std::cout << GREEN << "Profficient :)";
+        std::cout << GREEN << "Profficient :)" << RESET;
     else if (WPM < 130)
-        std::cout << GREEN << "Advanced! XD";
+        std::cout << GREEN << "Advanced! XD" << RESET;
     else
-        std::cout << GREEN << "Elite !!!";
+        std::cout << GREEN << "Elite !!!" << RESET;
     std::cout << '\n' << seperator << '\n';
 }
 
 int TypingGame::play() {
+    // std::cout << "Type to start timer\n" << std::string(25, '-');
     srand(time(0));
+
+    time_up = false;
+    int seconds = 15;
+    time_left = seconds;
 
     std::vector<std::string> words = load_words();
     if (words.empty()) return 1;
 
     int score = 0, total = 0, letter_score = 0, letter_count = 0;
-    int seconds = 15;
-    time_left = seconds;
-    std::thread t(&TypingGame::timer, this, seconds);
+    std::thread t;
+    bool timer_started = false;
 
     while (!time_up) {
         std::string word = words[rand() % words.size()];
@@ -122,7 +126,7 @@ int TypingGame::play() {
 
         std::string space(10, '\n');
         std::cout << space;
-        std::cout << "\nTime left: " << time_left << "\n" << std::flush;
+        std::cout << "Time left: " << time_left << "\n" << std::flush;
         std::cout << "Type the word: " << word << std::flush;
 
         while (index < (int)word.size() && !time_up) {
@@ -131,9 +135,16 @@ int TypingGame::play() {
                 continue;
             }
 
+            if (!timer_started)
+            {
+                time_up = false;
+                t = std::thread(&TypingGame::timer, this, seconds);
+                timer_started = true;
+            }
+
             progress.push_back(c);
 
-            std::cout << "\033[F\033[2K";    // ANSI escape: moves cursor up to refresh timer
+            std::cout << "\033[F\033[2K";    
             std::cout << "Time left: " << time_left << "   \n";  
             std::cout << "Type the word: ";
 
@@ -160,13 +171,13 @@ int TypingGame::play() {
         letter_count += word.size();
 
         if (!time_up) {
-            if (progress == word) score++;
-
+            if (progress == word) 
+                score++;
             total++;
         }
     }
-
-    t.join();
+    if (t.joinable())
+        t.join();
     stats_output(letter_score, letter_count, score, total, seconds);
     return 0;
 }
