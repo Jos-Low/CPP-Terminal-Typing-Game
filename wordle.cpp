@@ -11,6 +11,7 @@ const std::string Wordle::RESET  = "\033[0m";
 Wordle::Wordle()
 {
     srand(static_cast<unsigned int>(time(0)));
+    Grid.clear();
     Grid = std::vector<std::vector<std::string>>(6, std::vector<std::string>(5, "[ ]"));
     word_to_guess = Pick_Word("wordle.txt").substr(0,5);
     //std::cout << "DEBUG: " << word_to_guess << '\n';
